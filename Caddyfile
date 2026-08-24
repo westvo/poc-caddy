@@ -35,3 +35,20 @@
     }
   }
 }
+
+# Catch-all for custom domains (HTTP/HTTPS)
+http://, https:// {
+  @api {
+    path /custom-domains*
+  }
+  
+  handle @api {
+    reverse_proxy api:3000
+  }
+  
+  handle {
+    reverse_proxy api:3000 {
+      header_up Host {host}
+    }
+  }
+}
