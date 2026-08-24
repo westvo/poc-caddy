@@ -3,7 +3,7 @@
   auto_https off
 }
 
-# Management UI (localhost, server IP)
+# Management UI (localhost, server IP) - goes to frontend
 localhost, 222.255.214.97 {
   @api {
     path /custom-domains*
@@ -20,7 +20,7 @@ localhost, 222.255.214.97 {
   }
 }
 
-# HTTP for all other domains
+# Catch-all for custom domains - goes to backend (hello page)
 :80 {
   @api {
     path /custom-domains*
