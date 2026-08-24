@@ -1,8 +1,9 @@
-version: '3.8'
-
 services:
   # Backend API
   api:
+    build:
+      context: ./be/project-name
+      dockerfile: Dockerfile
     image: sellersstar-api:latest
     container_name: sellersstar-api
     restart: unless-stopped
@@ -22,6 +23,9 @@ services:
 
   # Frontend Next.js (SSR)
   frontend:
+    build:
+      context: ./fe/my-app
+      dockerfile: Dockerfile
     image: sellersstar-frontend:latest
     container_name: sellersstar-frontend
     restart: unless-stopped
