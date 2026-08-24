@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    image: sellersstar-api:latest
+    container_name: sellersstar-api
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1.5G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - sellersstar-network
+
+  # Frontend Next.js (SSR)
+  frontend:
+    image: sellersstar-frontend:latest
+    container_name: sellersstar-frontend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 0.75G
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - NEXT_PUBLIC_API_URL=http://localhost
+    depends_on:
+      - api
+    networks:
+      - sellersstar-network
+
+
+
+  # Caddy TLS Proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: sellersstar-caddy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 0.5G
+        reservations:
+          cpus: '0.25'
+          memory: 0.25G
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./certs:/etc/caddy/certs
+    environment:
+      - ACME_AGREE=true
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - sellersstar-network
+
+networks:
+  sellersstar-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

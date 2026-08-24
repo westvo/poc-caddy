@@ -1,0 +1,38 @@
+{
+  email admin@sellersstar.com
+  auto_https off
+}
+
+# Main domain (localhost) - forward to frontend by default
+:80 {
+  @api {
+    path /custom-domains*
+  }
+  
+  handle @api {
+    reverse_proxy api:3000
+  }
+  
+  handle {
+    reverse_proxy frontend:3001 {
+      header_up Host {host}
+    }
+  }
+}
+
+# Catch-all for all domains over HTTPS with custom cert
+:443 {
+  tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
+  
+  @api {
+    path /custom-domains*
+  }
+  
+  handle @api {
+    reverse_proxy api:3000
+  }
+  
+  handle {
+    reverse_proxy api:3000
+  }
+}
