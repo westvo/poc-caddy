@@ -4,7 +4,7 @@
 }
 
 # Case 1: Management UI (localhost, server IP) - goes to frontend
-localhost, 222.255.214.97 {
+localhost {
   @api {
     path /custom-domains*
   }
@@ -20,14 +20,39 @@ localhost, 222.255.214.97 {
   }
 }
 
-# Case 2: Catch-all for custom domains - goes to backend (hello page)
-:80 {
+222.255.214.97 {
   @api {
     path /custom-domains*
   }
   
   handle @api {
     reverse_proxy api:3000
+  }
+  
+  handle {
+    reverse_proxy frontend:3001 {
+      header_up Host {host}
+    }
+  }
+}
+
+# Case 2: Catch-all for custom domains ONLY - goes to backend (hello page)
+# Explicitly exclude management hosts
+:80 {
+  @management host localhost 222.255.214.97
+  
+  @api {
+    path /custom-domains*
+  }
+  
+  handle @api {
+    reverse_proxy api:3000
+  }
+  
+  handle @management {
+    reverse_proxy frontend:3001 {
+      header_up Host {host}
+    }
   }
   
   handle {
