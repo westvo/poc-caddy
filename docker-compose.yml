@@ -18,6 +18,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+    volumes:
+      - api_domains:/app/src/domains.json
     networks:
       - sellersstar-network
 
@@ -83,3 +85,4 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  api_domains:

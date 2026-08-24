@@ -1,14 +1,52 @@
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { CustomDomain, CustomDomainStatus, VerificationMethod } from './custom-domain.entity';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const HOSTNAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+
+const DOMAINS_FILE = path.join(__dirname, 'domains.json');
 
 @Injectable()
 export class CustomDomainService {
   private readonly logger = new Logger(CustomDomainService.name);
   private readonly verificationPrefix = '_sellersstar-verify';
   private readonly domains = new Map<string, CustomDomain>();
+
+  constructor() {
+    this.loadDomainsFromFile();
+  }
+
+  private loadDomainsFromFile() {
+    try {
+      if (fs.existsSync(DOMAINS_FILE)) {
+        const data = fs.readFileSync(DOMAINS_FILE, 'utf8');
+        const domainsArray = JSON.parse(data);
+        domainsArray.forEach((domain: CustomDomain) => {
+          domain.created_at = new Date(domain.created_at);
+          domain.updated_at = new Date(domain.updated_at);
+          if (domain.verified_at) {
+            domain.verified_at = new Date(domain.verified_at);
+          }
+          this.domains.set(domain.id, domain);
+        });
+        this.logger.log(`Loaded ${domainsArray.length} domains from file`);
+      }
+    } catch (error) {
+      this.logger.warn('Failed to load domains from file, starting empty');
+    }
+  }
+
+  private saveDomainsToFile() {
+    try {
+      const domainsArray = Array.from(this.domains.values());
+      fs.writeFileSync(DOMAINS_FILE, JSON.stringify(domainsArray, null, 2));
+      this.logger.log(`Saved ${domainsArray.length} domains to file`);
+    } catch (error) {
+      this.logger.error('Failed to save domains to file', error);
+    }
+  }
 
   async createCustomDomain(dto: {
     hostname: string;
@@ -45,6 +83,7 @@ export class CustomDomainService {
     };
 
     this.domains.set(domain.id, domain);
+    this.saveDomainsToFile();
     return domain;
   }
 
@@ -83,10 +122,12 @@ export class CustomDomainService {
       domain.verified_at = new Date();
       domain.last_error = undefined;
       domain.updated_at = new Date();
+      this.saveDomainsToFile();
       return { ok: true };
     } else {
       domain.last_error = reason ?? 'Verification failed';
       domain.updated_at = new Date();
+      this.saveDomainsToFile();
       return { ok: false, reason };
     }
   }
@@ -145,6 +186,15 @@ export class CustomDomainService {
       throw new NotFoundException('Domain not found');
     }
     return domain;
+  }
+
+  async deleteDomain(id: string): Promise<void> {
+    const domain = this.domains.get(id);
+    if (!domain) {
+      throw new NotFoundException('Domain not found');
+    }
+    this.domains.delete(id);
+    this.saveDomainsToFile();
   }
 
   async getVerificationTokenByHostname(hostname: string): Promise<string | null> {
