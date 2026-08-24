@@ -1,5 +1,6 @@
 {
   email admin@sellersstar.com
+  auto_https off
 }
 
 # Management UI (localhost, server IP)
@@ -21,23 +22,6 @@ localhost, 222.255.214.97 {
 
 # HTTP for all other domains
 :80 {
-  @api {
-    path /custom-domains*
-  }
-  
-  handle @api {
-    reverse_proxy api:3000
-  }
-  
-  handle {
-    reverse_proxy api:3000 {
-      header_up Host {host}
-    }
-  }
-}
-
-# HTTPS for all other domains
-:443 {
   @api {
     path /custom-domains*
   }
