@@ -3,7 +3,7 @@
   auto_https off
 }
 
-# Management UI (localhost, server IP) - goes to frontend
+# Case 1: Management UI (localhost, server IP) - goes to frontend
 localhost, 222.255.214.97 {
   @api {
     path /custom-domains*
@@ -20,19 +20,17 @@ localhost, 222.255.214.97 {
   }
 }
 
-# Catch-all for custom domains - goes to backend (hello page)
+# Case 2: Catch-all for custom domains - goes to backend (hello page)
 :80 {
-  @not_management not host localhost 222.255.214.97
-  
   @api {
     path /custom-domains*
   }
   
-  handle @api @not_management {
+  handle @api {
     reverse_proxy api:3000
   }
   
-  handle @not_management {
+  handle {
     reverse_proxy api:3000 {
       header_up Host {host}
     }
