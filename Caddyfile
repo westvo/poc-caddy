@@ -22,15 +22,19 @@ localhost, 222.255.214.97 {
 
 # Catch-all for custom domains - goes to backend (hello page)
 :80 {
+  @not_management {
+    not host localhost 222.255.214.97
+  }
+  
   @api {
     path /custom-domains*
   }
   
-  handle @api {
+  handle @api @not_management {
     reverse_proxy api:3000
   }
   
-  handle {
+  handle @not_management {
     reverse_proxy api:3000 {
       header_up Host {host}
     }
