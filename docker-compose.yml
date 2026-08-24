@@ -68,7 +68,6 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./certs:/etc/caddy/certs
     environment:
       - ACME_AGREE=true
     depends_on:

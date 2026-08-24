@@ -1,9 +1,8 @@
 {
   email admin@sellersstar.com
-  auto_https off
 }
 
-# Main domain (localhost) - forward to frontend by default
+# HTTP -> HTTPS redirect
 :80 {
   @api {
     path /custom-domains*
@@ -20,10 +19,8 @@
   }
 }
 
-# Catch-all for all domains over HTTPS with custom cert
+# HTTPS with Let's Encrypt (auto SSL)
 :443 {
-  tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
-  
   @api {
     path /custom-domains*
   }
@@ -33,6 +30,8 @@
   }
   
   handle {
-    reverse_proxy api:3000
+    reverse_proxy frontend:3001 {
+      header_up Host {host}
+    }
   }
 }
