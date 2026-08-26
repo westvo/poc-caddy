@@ -22,7 +22,7 @@ localhost {
   }
 }
 
-222.255.214.97 {
+gym-platform.store {
   @api {
     path /custom-domains*
   }
@@ -45,7 +45,7 @@ https:// {
     on_demand
   }
 
-  @management host localhost 222.255.214.97
+  @management host localhost gym-platform.store
   
   @api {
     path /custom-domains*
@@ -69,7 +69,7 @@ https:// {
 }
 
 http:// {
-  @management host localhost 222.255.214.97
+  @management host localhost gym-platform.store
   
   @api {
     path /custom-domains*
