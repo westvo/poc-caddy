@@ -10,8 +10,7 @@ export default function PerformanceDashboard() {
   const fetchPerformanceData = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const res = await fetch(`${apiUrl}/performance/dashboard`);
+      const res = await fetch('/performance/dashboard');
       const result = await res.json();
       if (result.success) {
         setData(result.data);

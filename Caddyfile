@@ -8,7 +8,7 @@
 # Case 1: Management UI (localhost, server IP) - goes to frontend
 localhost {
   @api {
-    path /custom-domains*
+    path /custom-domains* /performance*
   }
   
   handle @api {
@@ -24,7 +24,7 @@ localhost {
 
 gym-platform.store {
   @api {
-    path /custom-domains*
+    path /custom-domains* /performance*
   }
   
   handle @api {
@@ -48,7 +48,7 @@ https:// {
   @management host localhost gym-platform.store
   
   @api {
-    path /custom-domains*
+    path /custom-domains* /performance*
   }
   
   handle @api {
@@ -72,7 +72,7 @@ http:// {
   @management host localhost gym-platform.store
   
   @api {
-    path /custom-domains*
+    path /custom-domains* /performance*
   }
   
   handle @api {
