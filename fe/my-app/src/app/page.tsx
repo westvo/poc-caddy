@@ -144,9 +144,14 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '32px' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '32px', color: '#111827' }}>
-          Custom Domain Management
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827' }}>
+            Custom Domain Management
+          </h1>
+          <a href="/performance" style={{ padding: '8px 16px', backgroundColor: '#10b981', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
+            Performance Dashboard
+          </a>
+        </div>
 
         {/* Create Domain Form */}
         <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '24px', marginBottom: '32px' }}>
