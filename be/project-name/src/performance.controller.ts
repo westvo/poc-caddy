@@ -108,4 +108,56 @@ export class PerformanceController {
       return { success: false, error: error.message };
     }
   }
+
+  @Get('stress-test-qdrant')
+  async runStressTestQdrant() {
+    try {
+      const start = performance.now();
+      const numQueries = 1000;
+      
+      const queryPromises: any[] = [];
+      const vectorSize = 128; // The size we used when generating the fake data
+
+      for (let i = 0; i < numQueries; i++) {
+        // Generate a random vector for searching
+        const queryVector = Array.from({ length: vectorSize }, () => Math.random());
+        
+        const request = fetch(`http://222.255.214.97:6333/collections/benchmark_collection/points/search`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            vector: queryVector,
+            limit: 5,
+            with_payload: false
+          })
+        }).then(res => {
+          if (!res.ok) throw new Error('Qdrant returned ' + res.status);
+          return res.json();
+        });
+
+        queryPromises.push(request);
+      }
+      
+      const results = await Promise.allSettled(queryPromises);
+      const end = performance.now();
+
+      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.length - successful;
+
+      return {
+        success: true,
+        data: {
+          totalRequests: numQueries,
+          successfulRequests: successful,
+          failedRequests: failed,
+          totalTimeMs: end - start,
+          throughputRps: (successful / ((end - start) / 1000))
+        }
+      };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
 }
