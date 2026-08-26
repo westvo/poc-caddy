@@ -7,7 +7,7 @@ export class PerformanceController {
 
   constructor() {
     this.pool = mysql.createPool({
-      host: 'mysql', // docker-compose service name
+      host: '222.255.214.97', // connect via host IP
       user: 'root',
       password: 'root',
       database: 'test_db',
