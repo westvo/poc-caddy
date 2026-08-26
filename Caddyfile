@@ -1,8 +1,7 @@
 {
   email admin@sellersstar.com
   on_demand_tls {
-    # Optional for POC: ask endpoint to verify if the domain is allowed
-    # ask http://api:3000/api/check-domain
+    ask http://api:3000/
   }
 }
 
