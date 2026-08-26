@@ -74,4 +74,38 @@ export class PerformanceController {
       return { success: false, error: error.message };
     }
   }
+
+  @Get('stress-test')
+  async runStressTest() {
+    try {
+      const start = performance.now();
+      const numQueries = 1000;
+      
+      const queryPromises = [];
+      for (let i = 0; i < numQueries; i++) {
+        // Randomly query one of the 700 generated tables to prevent caching
+        const tableId = Math.floor(Math.random() * 700) + 1;
+        queryPromises.push(this.pool.query(`SELECT id, k, c, pad FROM sbtest${tableId} ORDER BY RAND() LIMIT 1`));
+      }
+      
+      const results = await Promise.allSettled(queryPromises);
+      const end = performance.now();
+
+      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.length - successful;
+
+      return {
+        success: true,
+        data: {
+          totalRequests: numQueries,
+          successfulRequests: successful,
+          failedRequests: failed,
+          totalTimeMs: end - start,
+          throughputRps: (successful / ((end - start) / 1000))
+        }
+      };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
 }

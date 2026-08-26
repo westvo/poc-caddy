@@ -6,6 +6,8 @@ export default function PerformanceDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [stressLoading, setStressLoading] = useState(false);
+  const [stressData, setStressData] = useState<any>(null);
 
   const fetchPerformanceData = async () => {
     setLoading(true);
@@ -106,6 +108,54 @@ export default function PerformanceDashboard() {
           )}
         </div>
       ) : null}
+
+      {/* Stress Test Section */}
+      <div style={{ marginTop: '40px', padding: '24px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Stress Test (1000 DB Queries)</h2>
+        <p style={{ color: '#4b5563', marginBottom: '16px', fontSize: '14px' }}>
+          This will trigger the backend to execute 1,000 random database queries concurrently to measure connection pool performance and database throughput.
+        </p>
+        
+        <button
+          onClick={async () => {
+            setStressLoading(true);
+            setStressData(null);
+            try {
+              const res = await fetch('/performance/stress-test');
+              const result = await res.json();
+              if (result.success) setStressData(result.data);
+            } catch (e) {
+              console.error(e);
+            } finally {
+              setStressLoading(false);
+            }
+          }}
+          disabled={stressLoading}
+          style={{
+            padding: '10px 20px', backgroundColor: stressLoading ? '#9ca3af' : '#dc2626', color: 'white', borderRadius: '6px',
+            border: 'none', cursor: stressLoading ? 'not-allowed' : 'pointer', fontWeight: '600'
+          }}
+        >
+          {stressLoading ? 'Running 1000 Queries...' : 'Run Stress Test'}
+        </button>
+
+        {stressData && (
+          <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', gap: '24px' }}>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280' }}>Total Time</p>
+              <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827' }}>{(stressData.totalTimeMs / 1000).toFixed(2)} s</p>
+            </div>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280' }}>Throughput</p>
+              <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827' }}>{stressData.throughputRps.toFixed(0)} req/s</p>
+            </div>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280' }}>Success / Fail</p>
+              <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#166534' }}>{stressData.successfulRequests} / <span style={{color: '#dc2626'}}>{stressData.failedRequests}</span></p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
