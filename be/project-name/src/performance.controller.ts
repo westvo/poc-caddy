@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import * as mysql from 'mysql2/promise';
+import * as os from 'os';
 
 @Controller('performance')
 export class PerformanceController {
@@ -37,6 +38,15 @@ export class PerformanceController {
 
       const end = performance.now();
 
+      // Server stats
+      const totalMem = os.totalmem();
+      const freeMem = os.freemem();
+      const usedMem = totalMem - freeMem;
+      const memUsagePercent = (usedMem / totalMem) * 100;
+      
+      const cpus = os.cpus();
+      const loadAvg = os.loadavg();
+
       return {
         success: true,
         data: {
@@ -46,6 +56,17 @@ export class PerformanceController {
           metrics: {
             dbReadTimeMs: readTime,
             totalApiTimeMs: end - start,
+          },
+          server: {
+            cpuCount: cpus.length,
+            cpuModel: cpus[0]?.model,
+            loadAvg1m: loadAvg[0],
+            loadAvg5m: loadAvg[1],
+            loadAvg15m: loadAvg[2],
+            totalMemBytes: totalMem,
+            usedMemBytes: usedMem,
+            freeMemBytes: freeMem,
+            memUsagePercent: memUsagePercent
           }
         }
       };

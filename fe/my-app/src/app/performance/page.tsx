@@ -79,6 +79,31 @@ export default function PerformanceDashboard() {
               {data.metrics.totalApiTimeMs.toFixed(2)} ms
             </p>
           </div>
+          
+          {data.server && (
+            <>
+              <div style={{ padding: '24px', backgroundColor: '#fdf2f8', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ fontSize: '14px', color: '#9d174d', marginBottom: '8px' }}>Server CPU</h3>
+                <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#be185d', marginBottom: '4px' }}>
+                  {data.server.cpuCount} Cores
+                </p>
+                <p style={{ fontSize: '12px', color: '#831843' }}>{data.server.cpuModel}</p>
+                <p style={{ fontSize: '12px', color: '#831843', marginTop: '8px' }}>
+                  Load Avg: {data.server.loadAvg1m.toFixed(2)}, {data.server.loadAvg5m.toFixed(2)}, {data.server.loadAvg15m.toFixed(2)}
+                </p>
+              </div>
+
+              <div style={{ padding: '24px', backgroundColor: '#fffbeb', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ fontSize: '14px', color: '#b45309', marginBottom: '8px' }}>Server RAM</h3>
+                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#d97706', marginBottom: '4px' }}>
+                  {data.server.memUsagePercent.toFixed(1)}% Used
+                </p>
+                <p style={{ fontSize: '14px', color: '#92400e' }}>
+                  {(data.server.usedMemBytes / 1024 / 1024 / 1024).toFixed(2)} GB / {(data.server.totalMemBytes / 1024 / 1024 / 1024).toFixed(2)} GB
+                </p>
+              </div>
+            </>
+          )}
         </div>
       ) : null}
     </div>
