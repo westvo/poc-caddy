@@ -34,7 +34,7 @@ export default function PerformanceDashboard() {
     <div style={{ maxWidth: '900px', margin: '40px auto', fontFamily: 'sans-serif', padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Database Performance Dashboard</h1>
-        <a href="/" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '14px' }}>← Back to Home</a>
+        <a href="/" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '14px' }}>Back to Home</a>
       </div>
 
       {loading && !data ? (
@@ -78,99 +78,133 @@ export default function PerformanceDashboard() {
         </div>
       ) : null}
 
-          <p style={{ color: '#4b5563', marginBottom: '16px', fontSize: '14px' }}>
-            Execute 1,000 random database queries concurrently to measure connection pool performance and throughput.
-          </p>
-          
-          <button
-            onClick={async () => {
-              setStressLoading(true);
-              setStressData(null);
-              try {
-                const res = await fetch('/performance/stress-test');
-                const result = await res.json();
-                if (result.success) setStressData(result.data);
-              } catch (e) {
-                console.error(e);
-              } finally {
-                setStressLoading(false);
-              }
-            }}
-            disabled={stressLoading}
-            style={{
-              padding: '10px 20px', backgroundColor: stressLoading ? '#9ca3af' : '#dc2626', color: 'white', borderRadius: '6px',
-              border: 'none', cursor: stressLoading ? 'not-allowed' : 'pointer', fontWeight: '600'
-            }}
-          >
-            {stressLoading ? 'Running 1000 Queries...' : 'Run MySQL Test'}
-          </button>
+      <StressSection />
+    </div>
+  );
+}
 
-          {stressData && (
-            <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-              <div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>Total Time</p>
-                <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827' }}>{(stressData.totalTimeMs / 1000).toFixed(2)} s</p>
-              </div>
-              <div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>Throughput</p>
-                <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827' }}>{stressData.throughputRps.toFixed(0)} req/s</p>
-              </div>
-              <div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>Success / Fail</p>
-                <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#166534' }}>{stressData.successfulRequests} / <span style={{color: '#dc2626'}}>{stressData.failedRequests}</span></p>
-              </div>
-            </div>
+function StressSection() {
+  const [mysqlRunning, setMysqlRunning] = useState(false);
+  const [mysqlData, setMysqlData] = useState<any>(null);
+  const [mysqlRound, setMysqlRound] = useState(0);
+  const [mysqlTimerId, setMysqlTimerId] = useState<any>(null);
+
+  const [qdrantRunning, setQdrantRunning] = useState(false);
+  const [qdrantData, setQdrantData] = useState<any>(null);
+  const [qdrantRound, setQdrantRound] = useState(0);
+  const [qdrantTimerId, setQdrantTimerId] = useState<any>(null);
+
+  const runMysql = async () => {
+    try {
+      const res = await fetch('/performance/stress-test');
+      const r = await res.json();
+      if (r.success) { setMysqlData(r.data); setMysqlRound(n => n + 1); }
+    } catch (e) {}
+  };
+
+  const startMysql = () => {
+    setMysqlRound(0);
+    setMysqlRunning(true);
+    runMysql();
+    const id = setInterval(runMysql, 1000);
+    setMysqlTimerId(id);
+  };
+
+  const stopMysql = () => {
+    setMysqlRunning(false);
+    clearInterval(mysqlTimerId);
+    setMysqlTimerId(null);
+  };
+
+  const runQdrant = async () => {
+    try {
+      const res = await fetch('/performance/stress-test-qdrant');
+      const r = await res.json();
+      if (r.success) { setQdrantData(r.data); setQdrantRound(n => n + 1); }
+    } catch (e) {}
+  };
+
+  const startQdrant = () => {
+    setQdrantRound(0);
+    setQdrantRunning(true);
+    runQdrant();
+    const id = setInterval(runQdrant, 1000);
+    setQdrantTimerId(id);
+  };
+
+  const stopQdrant = () => {
+    setQdrantRunning(false);
+    clearInterval(qdrantTimerId);
+    setQdrantTimerId(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (mysqlTimerId) clearInterval(mysqlTimerId);
+      if (qdrantTimerId) clearInterval(qdrantTimerId);
+    };
+  }, [mysqlTimerId, qdrantTimerId]);
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+      <div style={{ padding: '24px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>MySQL Stress Test</h2>
+          {mysqlRunning && (
+            <span style={{ fontSize: '11px', backgroundColor: '#dcfce7', color: '#16a34a', padding: '2px 8px', borderRadius: '999px', fontWeight: '600' }}>
+              Round {mysqlRound}
+            </span>
           )}
         </div>
-
-        {/* Qdrant Stress Test */}
-        <div style={{ padding: '24px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Qdrant Stress Test</h2>
-          <p style={{ color: '#4b5563', marginBottom: '16px', fontSize: '14px' }}>
-            Execute 1,000 vector search API calls concurrently against the Qdrant database to measure vector search throughput.
-          </p>
-          
-          <button
-            onClick={async () => {
-              setStressQdrantLoading(true);
-              setStressQdrantData(null);
-              try {
-                const res = await fetch('/performance/stress-test-qdrant');
-                const result = await res.json();
-                if (result.success) setStressQdrantData(result.data);
-              } catch (e) {
-                console.error(e);
-              } finally {
-                setStressQdrantLoading(false);
-              }
-            }}
-            disabled={stressQdrantLoading}
-            style={{
-              padding: '10px 20px', backgroundColor: stressQdrantLoading ? '#9ca3af' : '#7c3aed', color: 'white', borderRadius: '6px',
-              border: 'none', cursor: stressQdrantLoading ? 'not-allowed' : 'pointer', fontWeight: '600'
-            }}
-          >
-            {stressQdrantLoading ? 'Running 1000 Searches...' : 'Run Qdrant Test'}
+        <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '16px' }}>
+          1,000 queries vao 10 random tables moi giay. Tu lap den khi nhan Stop.
+        </p>
+        {!mysqlRunning ? (
+          <button onClick={startMysql} style={{ padding: '10px 20px', backgroundColor: '#dc2626', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+            Start MySQL Test
           </button>
+        ) : (
+          <button onClick={stopMysql} style={{ padding: '10px 20px', backgroundColor: '#374151', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+            Stop
+          </button>
+        )}
+        {mysqlData && (
+          <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div><p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 2px 0' }}>Total Time</p><p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{(mysqlData.totalTimeMs / 1000).toFixed(2)} s</p></div>
+            <div><p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 2px 0' }}>Throughput</p><p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{mysqlData.throughputRps.toFixed(0)} req/s</p></div>
+            <div><p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 2px 0' }}>Success / Fail</p><p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}><span style={{ color: '#16a34a' }}>{mysqlData.successfulRequests}</span> / <span style={{ color: '#dc2626' }}>{mysqlData.failedRequests}</span></p></div>
+          </div>
+        )}
+      </div>
 
-          {stressQdrantData && (
-            <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-              <div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>Total Time</p>
-                <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827' }}>{(stressQdrantData.totalTimeMs / 1000).toFixed(2)} s</p>
-              </div>
-              <div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>Throughput</p>
-                <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827' }}>{stressQdrantData.throughputRps.toFixed(0)} req/s</p>
-              </div>
-              <div>
-                <p style={{ fontSize: '12px', color: '#6b7280' }}>Success / Fail</p>
-                <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#166534' }}>{stressQdrantData.successfulRequests} / <span style={{color: '#dc2626'}}>{stressQdrantData.failedRequests}</span></p>
-              </div>
-            </div>
+      <div style={{ padding: '24px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Qdrant Stress Test</h2>
+          {qdrantRunning && (
+            <span style={{ fontSize: '11px', backgroundColor: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: '999px', fontWeight: '600' }}>
+              Round {qdrantRound}
+            </span>
           )}
         </div>
-
+        <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '16px' }}>
+          1,000 vector search (768d) vao Qdrant moi giay. Tu lap den khi nhan Stop.
+        </p>
+        {!qdrantRunning ? (
+          <button onClick={startQdrant} style={{ padding: '10px 20px', backgroundColor: '#7c3aed', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+            Start Qdrant Test
+          </button>
+        ) : (
+          <button onClick={stopQdrant} style={{ padding: '10px 20px', backgroundColor: '#374151', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+            Stop
+          </button>
+        )}
+        {qdrantData && (
+          <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div><p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 2px 0' }}>Total Time</p><p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{(qdrantData.totalTimeMs / 1000).toFixed(2)} s</p></div>
+            <div><p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 2px 0' }}>Throughput</p><p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{qdrantData.throughputRps.toFixed(0)} req/s</p></div>
+            <div><p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 2px 0' }}>Success / Fail</p><p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}><span style={{ color: '#16a34a' }}>{qdrantData.successfulRequests}</span> / <span style={{ color: '#dc2626' }}>{qdrantData.failedRequests}</span></p></div>
+          </div>
+        )}
       </div>
     </div>
   );
