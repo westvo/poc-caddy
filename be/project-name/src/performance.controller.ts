@@ -116,7 +116,7 @@ export class PerformanceController {
       const numQueries = 1000;
       
       const queryPromises: any[] = [];
-      const vectorSize = 128; // The size we used when generating the fake data
+      const vectorSize = 768;
 
       for (let i = 0; i < numQueries; i++) {
         // Generate a random vector for searching
