@@ -6,10 +6,6 @@ export default function PerformanceDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [stressLoading, setStressLoading] = useState(false);
-  const [stressData, setStressData] = useState<any>(null);
-  const [stressQdrantLoading, setStressQdrantLoading] = useState(false);
-  const [stressQdrantData, setStressQdrantData] = useState<any>(null);
 
   const fetchPerformanceData = async (isBackground = false) => {
     if (!isBackground) setLoading(true);
@@ -30,99 +26,58 @@ export default function PerformanceDashboard() {
 
   useEffect(() => {
     fetchPerformanceData();
-
-    // Realtime polling every 2 seconds
-    const interval = setInterval(() => {
-      fetchPerformanceData(true);
-    }, 2000);
-
+    const interval = setInterval(() => fetchPerformanceData(true), 2000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', fontFamily: 'sans-serif', padding: '20px' }}>
+    <div style={{ maxWidth: '900px', margin: '40px auto', fontFamily: 'sans-serif', padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>Database Performance Dashboard</h1>
-        <a href="/" style={{ color: '#2563eb', textDecoration: 'none' }}>Back to Home</a>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Database Performance Dashboard</h1>
+        <a href="/" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '14px' }}>← Back to Home</a>
       </div>
 
-      <button
-        onClick={fetchPerformanceData}
-        style={{
-          padding: '8px 16px', backgroundColor: '#10b981', color: 'white', borderRadius: '6px',
-          border: 'none', cursor: 'pointer', marginBottom: '20px', fontWeight: '600'
-        }}
-      >
-        Refresh Metrics
-      </button>
-
-      {loading ? (
-        <p>Loading performance data...</p>
+      {loading && !data ? (
+        <p style={{ color: '#6b7280' }}>Loading metrics...</p>
       ) : error ? (
-        <div style={{ padding: '16px', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '8px' }}>
-          Error: {error}
-        </div>
+        <div style={{ padding: '16px', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '8px' }}>Error: {error}</div>
       ) : data ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '32px' }}>
           <div style={{ padding: '24px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total Tables</h3>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827' }}>{data.tableCount}</p>
+            <h3 style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px', fontWeight: '500' }}>Total Tables</h3>
+            <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827', margin: 0 }}>{data.tableCount}</p>
           </div>
-          
           <div style={{ padding: '24px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Estimated Total Rows</h3>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827' }}>
-              {new Intl.NumberFormat().format(data.totalRows)}
-            </p>
+            <h3 style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px', fontWeight: '500' }}>Estimated Rows</h3>
+            <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827', margin: 0 }}>{new Intl.NumberFormat().format(data.totalRows)}</p>
           </div>
-
           <div style={{ padding: '24px', backgroundColor: '#eff6ff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '14px', color: '#1e40af', marginBottom: '8px' }}>DB Query Time (LIMIT 50)</h3>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#1d4ed8' }}>
-              {data.metrics.dbReadTimeMs.toFixed(2)} ms
-            </p>
+            <h3 style={{ fontSize: '13px', color: '#1e40af', marginBottom: '8px', fontWeight: '500' }}>DB Query Time</h3>
+            <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#1d4ed8', margin: 0 }}>{data.metrics.dbReadTimeMs.toFixed(2)} ms</p>
           </div>
-
-          <div style={{ padding: '24px', backgroundColor: '#f0fdf4', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '14px', color: '#166534', marginBottom: '8px' }}>Total API Latency</h3>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#15803d' }}>
-              {data.metrics.totalApiTimeMs.toFixed(2)} ms
-            </p>
-          </div>
-          
           {data.server && (
             <>
               <div style={{ padding: '24px', backgroundColor: '#fdf2f8', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <h3 style={{ fontSize: '14px', color: '#9d174d', marginBottom: '8px' }}>Server CPU</h3>
-                <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#be185d', marginBottom: '4px' }}>
-                  {data.server.cpuCount} Cores
-                </p>
-                <p style={{ fontSize: '12px', color: '#831843' }}>{data.server.cpuModel}</p>
-                <p style={{ fontSize: '12px', color: '#831843', marginTop: '8px' }}>
-                  Load Avg: {data.server.loadAvg1m.toFixed(2)}, {data.server.loadAvg5m.toFixed(2)}, {data.server.loadAvg15m.toFixed(2)}
+                <h3 style={{ fontSize: '13px', color: '#9d174d', marginBottom: '8px', fontWeight: '500' }}>CPU ({data.server.cpuCount} cores)</h3>
+                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#be185d', margin: 0 }}>{data.server.loadAvg1m.toFixed(2)} load</p>
+                <p style={{ fontSize: '11px', color: '#831843', marginTop: '4px' }}>5m: {data.server.loadAvg5m.toFixed(2)} | 15m: {data.server.loadAvg15m.toFixed(2)}</p>
+              </div>
+              <div style={{ padding: '24px', backgroundColor: '#fffbeb', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ fontSize: '13px', color: '#b45309', marginBottom: '8px', fontWeight: '500' }}>RAM Usage</h3>
+                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#d97706', margin: 0 }}>{data.server.memUsagePercent.toFixed(1)}%</p>
+                <p style={{ fontSize: '11px', color: '#92400e', marginTop: '4px' }}>
+                  {(data.server.usedMemBytes / 1024 / 1024 / 1024).toFixed(2)} / {(data.server.totalMemBytes / 1024 / 1024 / 1024).toFixed(2)} GB
                 </p>
               </div>
-
-              <div style={{ padding: '24px', backgroundColor: '#fffbeb', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <h3 style={{ fontSize: '14px', color: '#b45309', marginBottom: '8px' }}>Server RAM</h3>
-                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#d97706', marginBottom: '4px' }}>
-                  {data.server.memUsagePercent.toFixed(1)}% Used
-                </p>
-                <p style={{ fontSize: '14px', color: '#92400e' }}>
-                  {(data.server.usedMemBytes / 1024 / 1024 / 1024).toFixed(2)} GB / {(data.server.totalMemBytes / 1024 / 1024 / 1024).toFixed(2)} GB
-                </p>
+              <div style={{ padding: '24px', backgroundColor: '#f0fdf4', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ fontSize: '13px', color: '#166534', marginBottom: '8px', fontWeight: '500' }}>API Latency</h3>
+                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#15803d', margin: 0 }}>{data.metrics.totalApiTimeMs.toFixed(0)} ms</p>
               </div>
             </>
           )}
         </div>
       ) : null}
 
-      {/* Stress Test Section */}
-      <div style={{ marginTop: '40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        
-        {/* MySQL Stress Test */}
-        <div style={{ padding: '24px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>MySQL Stress Test</h2>
           <p style={{ color: '#4b5563', marginBottom: '16px', fontSize: '14px' }}>
             Execute 1,000 random database queries concurrently to measure connection pool performance and throughput.
           </p>

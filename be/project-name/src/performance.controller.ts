@@ -27,9 +27,10 @@ export class PerformanceController {
       const [tables]: any = await this.pool.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = 'test_db'");
       const tableCount = tables[0].count;
 
-      // Measure performance on a simple read
+      // Measure performance on a simple read across 10 random tables
       const readStart = performance.now();
-      const [sampleData]: any = await this.pool.query("SELECT * FROM sbtest1 LIMIT 50");
+      const tableId = Math.floor(Math.random() * 10) + 1;
+      const [sampleData]: any = await this.pool.query(`SELECT * FROM sbtest${tableId} LIMIT 50`);
       const readTime = performance.now() - readStart;
 
       // Get total rows estimate
