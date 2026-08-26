@@ -81,7 +81,7 @@ export class PerformanceController {
       const start = performance.now();
       const numQueries = 1000;
       
-      const queryPromises = [];
+      const queryPromises: any[] = [];
       for (let i = 0; i < numQueries; i++) {
         // Randomly query one of the 700 generated tables to prevent caching
         const tableId = Math.floor(Math.random() * 700) + 1;
