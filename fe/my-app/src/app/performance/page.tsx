@@ -11,26 +11,32 @@ export default function PerformanceDashboard() {
   const [stressQdrantLoading, setStressQdrantLoading] = useState(false);
   const [stressQdrantData, setStressQdrantData] = useState<any>(null);
 
-  const fetchPerformanceData = async () => {
-    setLoading(true);
+  const fetchPerformanceData = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       const res = await fetch('/performance/dashboard');
       const result = await res.json();
       if (result.success) {
         setData(result.data);
-        setError("");
       } else {
         setError(result.error);
       }
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchPerformanceData();
+
+    // Realtime polling every 2 seconds
+    const interval = setInterval(() => {
+      fetchPerformanceData(true);
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (

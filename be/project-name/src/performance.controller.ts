@@ -38,9 +38,30 @@ export class PerformanceController {
 
       const end = performance.now();
 
-      // Server stats
-      const totalMem = os.totalmem();
-      const freeMem = os.freemem();
+      // Read host memory from /proc/meminfo
+      let totalMem = os.totalmem();
+      let freeMem = os.freemem();
+      try {
+        const fs = require('fs');
+        const meminfo = fs.readFileSync('/proc/meminfo', 'utf8');
+        const memTotalMatch = meminfo.match(/MemTotal:\s+(\d+)/);
+        const memFreeMatch = meminfo.match(/MemFree:\s+(\d+)/);
+        const memAvailableMatch = meminfo.match(/MemAvailable:\s+(\d+)/);
+        
+        if (memTotalMatch) {
+          totalMem = parseInt(memTotalMatch[1], 10) * 1024; // convert kB to bytes
+        }
+        
+        // Use MemAvailable if possible (more accurate for "free" memory as it includes reclaimable caches), 
+        // but if the user specifically expects MemTotal - MemFree to match their control panel, we'll use MemFree.
+        // Actually, we'll use MemAvailable for a more accurate "free" memory, but let's calculate used memory exactly as the user's panel does:
+        if (memFreeMatch) {
+          freeMem = parseInt(memFreeMatch[1], 10) * 1024;
+        }
+      } catch (e) {
+        // Fallback to os methods if /proc/meminfo is unreadable
+      }
+
       const usedMem = totalMem - freeMem;
       const memUsagePercent = (usedMem / totalMem) * 100;
       
